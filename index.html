@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RapidChat — Sistema de Mensagens Prontas</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===================== TOPBAR ===================== -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="icon-btn only-mobile" id="btnSidebarToggle" title="Menu">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    <div class="brand">
+      <div class="brand-icon"><i class="fa-solid fa-bolt"></i></div>
+      <div class="brand-text">
+        <span class="brand-title">RapidChat</span>
+        <span class="brand-sub">Sistema de Mensagens</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="topbar-center">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="searchInput" placeholder="Pesquisar mensagem... (Ctrl + F)">
+      <kbd>Ctrl F</kbd>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <div class="stat-pill" title="Total de mensagens cadastradas">
+      <i class="fa-solid fa-message"></i>
+      <span id="statTotal">0</span>
+    </div>
+    <button class="icon-btn" id="btnTheme" title="Modo Claro / Escuro">
+      <i class="fa-solid fa-sun"></i>
+    </button>
+    <button class="btn btn-primary" id="btnNewMessage" title="Nova mensagem (Ctrl + N)">
+      <i class="fa-solid fa-plus"></i>
+      <span>Nova Mensagem</span>
+    </button>
+  </div>
+</header>
+
+<div class="app-shell">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <h4>Painel</h4>
+      <div class="mini-stats">
+        <div class="mini-stat">
+          <span class="mini-stat-value" id="statMessages">0</span>
+          <span class="mini-stat-label">Mensagens</span>
+        </div>
+        <div class="mini-stat">
+          <span class="mini-stat-value" id="statFavorites">0</span>
+          <span class="mini-stat-label">Favoritas</span>
+        </div>
+        <div class="mini-stat">
+          <span class="mini-stat-value" id="statCategories">0</span>
+          <span class="mini-stat-label">Categorias</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h4>Categorias</h4>
+      <ul class="category-list" id="categoryList">
+        <!-- populated by JS -->
+      </ul>
+      <button class="btn btn-ghost btn-block" id="btnNewCategory">
+        <i class="fa-solid fa-tag"></i> Nova Categoria
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <h4>Dados</h4>
+      <button class="btn btn-ghost btn-block" id="btnExport">
+        <i class="fa-solid fa-file-export"></i> Exportar Mensagens
+      </button>
+      <button class="btn btn-ghost btn-block" id="btnImport">
+        <i class="fa-solid fa-file-import"></i> Importar Mensagens
+      </button>
+      <input type="file" id="importFile" accept=".json" hidden>
+      <button class="btn btn-danger btn-block" id="btnClearMessages">
+        <i class="fa-solid fa-broom"></i> Limpar Mensagens
+      </button>
+    </div>
+
+    <div class="sidebar-section shortcuts-hint">
+      <h4>Atalhos</h4>
+      <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>F</kbd><span>Pesquisar</span></div>
+      <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>N</kbd><span>Nova mensagem</span></div>
+      <div class="shortcut-row"><kbd>Esc</kbd><span>Fechar modal</span></div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ===================== MAIN CONTENT ===================== -->
+  <main class="content">
+    <div class="content-header">
+      <div>
+        <h2 id="currentCategoryTitle">Todas as mensagens</h2>
+        <p id="resultsCount">0 mensagens encontradas</p>
+      </div>
+    </div>
+
+    <div class="cards-grid" id="cardsGrid">
+      <!-- cards populated by JS -->
+    </div>
+
+    <div class="empty-state" id="emptyState" hidden>
+      <i class="fa-solid fa-inbox"></i>
+      <h3>Nenhuma mensagem encontrada</h3>
+      <p>Tente outro termo de busca ou crie uma nova mensagem.</p>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== MODAL: NOVA / EDITAR MENSAGEM ===================== -->
+<div class="modal-overlay" id="messageModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle"><i class="fa-solid fa-pen"></i> Nova Mensagem</h3>
+      <button class="icon-btn" id="btnCloseModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="messageId">
+
+      <label class="field-label">Título</label>
+      <input type="text" id="fieldTitle" class="field-input" placeholder="Ex: Atendimento Inicial" maxlength="60">
+
+      <label class="field-label">Descrição</label>
+      <input type="text" id="fieldDescription" class="field-input" placeholder="Ex: Mensagem de boas-vindas ao cliente" maxlength="120">
+
+      <label class="field-label">Categoria</label>
+      <select id="fieldCategory" class="field-input"></select>
+
+      <label class="field-label">Mensagem</label>
+      <textarea id="fieldMessage" class="field-input field-textarea" placeholder="Digite o conteúdo da mensagem..." rows="6"></textarea>
+      <span class="char-count"><span id="charCount">0</span> caracteres</span>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btnCancelModal">Cancelar</button>
+      <button class="btn btn-primary" id="btnSaveMessage"><i class="fa-solid fa-floppy-disk"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: NOVA CATEGORIA ===================== -->
+<div class="modal-overlay" id="categoryModalOverlay">
+  <div class="modal modal-small">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-tag"></i> Nova Categoria</h3>
+      <button class="icon-btn" id="btnCloseCategoryModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <label class="field-label">Nome da categoria</label>
+      <input type="text" id="fieldNewCategory" class="field-input" placeholder="Ex: Comercial" maxlength="30">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btnCancelCategory">Cancelar</button>
+      <button class="btn btn-primary" id="btnSaveCategory"><i class="fa-solid fa-check"></i> Criar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: CONFIRMAÇÃO EXCLUSÃO ===================== -->
+<div class="modal-overlay" id="confirmModalOverlay">
+  <div class="modal modal-small">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-triangle-exclamation"></i> Confirmar exclusão</h3>
+      <button class="icon-btn" id="btnCloseConfirmModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p id="confirmText">Deseja realmente excluir esta mensagem? Essa ação não pode ser desfeita.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btnCancelConfirm">Cancelar</button>
+      <button class="btn btn-danger" id="btnConfirmDelete"><i class="fa-solid fa-trash"></i> Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: CONFIRMAR LIMPEZA TOTAL ===================== -->
+<div class="modal-overlay" id="clearConfirmModalOverlay">
+  <div class="modal modal-small">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i> Limpar todas as mensagens</h3>
+      <button class="icon-btn" id="btnCloseClearConfirmModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p>Esta ação vai <strong>apagar permanentemente</strong> todas as mensagens e categorias cadastradas no sistema. Não é possível desfazer depois de confirmado.</p>
+      <p style="margin-top:12px; color: var(--text-dim); font-size: 12.5px;">
+        <i class="fa-solid fa-circle-info"></i> Se ainda não exportou um backup, recomendamos fazer isso antes de continuar.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btnCancelClearConfirm">Cancelar</button>
+      <button class="btn btn-danger" id="btnConfirmClear"><i class="fa-solid fa-broom"></i> Limpar Tudo</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: RESTAURAR / IMPORTAR NOVO ARQUIVO ===================== -->
+<div class="modal-overlay" id="restoreModalOverlay">
+  <div class="modal modal-small">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-file-import"></i> Carregar novo arquivo</h3>
+      <button class="icon-btn" id="btnCloseRestoreModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom:16px;">O sistema foi limpo. Selecione um arquivo JSON para carregar as novas mensagens e categorias.</p>
+      <button class="upload-zone" id="btnSelectRestoreFile">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <span>Clique para selecionar o arquivo .json</span>
+      </button>
+      <input type="file" id="restoreImportFile" accept=".json" hidden>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btnRestoreDefaults">Usar mensagens padrão</button>
+      <button class="btn btn-ghost" id="btnCancelRestore">Deixar vazio</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TOAST CONTAINER ===================== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
