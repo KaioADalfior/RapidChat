@@ -101,10 +101,14 @@ i{ line-height: 1; }
 .brand-icon{
   width: 42px; height: 42px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   display:flex; align-items:center; justify-content:center;
-  color:#fff; font-size: 18px;
-  box-shadow: 0 6px 18px -4px var(--primary-glow);
+  overflow: hidden;
+  /* box-shadow: 0 6px 18px -4px var(--primary-glow); */
+}
+.brand-icon img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .brand-text{ display:flex; flex-direction:column; line-height:1.15; }
